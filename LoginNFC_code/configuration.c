@@ -15,12 +15,20 @@ char tempPassword[MAX_STR_LENGTH];
 #define MAX_UID_LENGTH ISO14443A_UID_TRIPLE
 
 configState configurationState;
+unsigned char readTagToStoreDelay;
+
 char tempPassword[];
 
-#pragma DATA_SECTION(password,".infoD")
+// Store in info D (0x1800)
+// #pragma DATA_SECTION(uidLength,".infoD")
+// Not sure how to locate a whole block of variables sequentially
+#pragma location=0x1800
 tISO14443A_UidSize uidLength = ISO14443A_UID_UNKNOWN;
+#pragma location=0x1802
 char uid[MAX_UID_LENGTH] = "\0";
-char password[MAX_PASSWORD_LENGTH] = "password\0"; // Store in info D (0x1800)
+#pragma location=0x180C
+char password[MAX_PASSWORD_LENGTH] = "password\0";
+
 
 void handleCDCDataReceived(void) {
 
@@ -44,8 +52,10 @@ void handleCDCDataReceived(void) {
     		case RUNNING:
     			storePasswordInRAM(wholeString);
     			cdcSend("\r\nScan NFC tag to store new password...\r\n");
+    			LED_RED;
     			LED_YELLOW;
     			configurationState = PASSWORD_READY_TO_STORE;
+    			readTagToStoreDelay = 32;
     			break;
 
     		case PASSWORD_READY_TO_STORE:
@@ -58,6 +68,15 @@ void handleCDCDataReceived(void) {
 
     }
 
+}
+
+void checkStoreNewPasswordAndTagTimer() {
+	if (configurationState == PASSWORD_READY_TO_STORE) {
+		if (--readTagToStoreDelay == 0) {
+			cdcSend("Timed out.\r\n");
+			configurationState = RUNNING;
+		}
+	}
 }
 
 void clearBuffer() {
@@ -94,6 +113,7 @@ void storeUidAndPasswordInFlash(tISO14443A_UidSize newUidLength, uint8_t* newUid
 	  FCTL3 = FWKEY+LOCK;                       // Set LOCK bit
 
 	  cdcSend("New password stored.\r\n");
+
 	  LED_OFF;
 	  configurationState = RUNNING;
 }

@@ -55,14 +55,14 @@
 uint8_t Nfc_FindTag(void)
 {
 	// Just a quick flash to show we're operating
-	LED_GREEN;
+	//LED_GREEN;
 
 	// Clear IRQ Flags before enabling TRF7970A
 	IRQ_CLR;
 	IRQ_ON;
 	TRF_ENABLE;
 
-	LED_OFF;
+	//LED_OFF;
 
 	// Must wait at least 4.8 mSec to allow TRF7970A to initialize.
 	McuDelayMillisecond(5);

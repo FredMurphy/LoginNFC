@@ -144,30 +144,38 @@ void main (void)
 
 			delayUntilReadNfc = 1;
 
+			checkStoreNewPasswordAndTagTimer();
+
 			if (Nfc_FindTag() == STATUS_SUCCESS)
 			{
 				size = Iso14443a_Get_UidSize();
 				guid = Iso14443a_Get_Uid();
 
-				if (configurationState == PASSWORD_READY_TO_STORE)
-					storeUidAndPasswordInFlash(size, guid, tempPassword);
+				if (configurationState == PASSWORD_READY_TO_STORE) {
 
-				else {
+					storeUidAndPasswordInFlash(size, guid, tempPassword);
+					// Successful read. Stop reading for a bit
+					delayUntilReadNfc = 8;
+
+				}else {
 
 					// Compare and unlock
 					if ((size == uidLength) && (memcmp(guid, uid, uidLength) == 0))
 					{
 						LED_GREEN;
 						unlockPC();
-						// We're done. Stop reading for a bit
+						// Successful read. Stop reading for a bit
 						delayUntilReadNfc = 8;
-
 					} else {
 						LED_RED;
 					}
 				}
+
 			} else {
-				LED_OFF;
+				if (configurationState == PASSWORD_READY_TO_STORE)
+					LED_YELLOW;
+				else
+					LED_OFF;
 			}
 		}
 
