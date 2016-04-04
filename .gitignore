@@ -5,3 +5,4 @@ Debug
 RemoteSystemsTempFiles
 Thumbs.db
 *.b?
+*.gcode
