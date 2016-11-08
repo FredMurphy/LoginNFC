@@ -15,6 +15,13 @@ void McuCounterSet(void);
 void McuDelayMillisecond(uint32_t n_ms);
 void startNfcTimer();
 
+#define PxIN(port)  P##port##IN
+#define PxOUT(port) P##port##OUT
+#define PxDIR(port) P##port##DIR
+#define PxIE(port)  P##port##IE
+#define PxIES(port) P##port##IES
+#define PxIFG(port) P##port##IFG
+
 //=====MCU constants=============================================
 #if defined (__MSP430F5529__)
 #define LED_PORT_SET	P1DIR |= LED_RED_PIN; P4DIR |= LED_GREEN_PIN
