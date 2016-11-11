@@ -58,6 +58,7 @@
 #include "hal.h"
 #include "nfc.h"
 #include "configuration.h"
+#include "cap_touch.h"
 
 extern configState configurationState;
 extern char tempPassword[];
@@ -88,12 +89,15 @@ void waitForUsbActive(void);
 void main (void)
 {
 
-     WDT_A_hold(WDT_A_BASE); // Stop watchdog timer
+     //WDT_A_hold(WDT_A_BASE); // Stop watchdog timer
 
     // Minumum Vcore setting required for the USB API is PMM_CORE_LEVEL_2 .
     PMM_setVCore(PMM_CORE_LEVEL_2);
     initPorts();           // Config GPIOS for low-power (output low)
     initClocks(8000000);   // Config clocks. MCLK=SMCLK=FLL=8MHz; ACLK=REFO/16=2kHz
+
+    initCapTouch();
+
     Keyboard_init();       // Init keyboard report
     USB_setup(TRUE, TRUE); // Init USB & events; if a host is present, connect
 
@@ -131,6 +135,7 @@ void main (void)
 
 	// Enable global interrupts
 	__bis_SR_register(GIE);
+
 
 	// Wait for USB to be up and stable
 	waitForUsbActive();
