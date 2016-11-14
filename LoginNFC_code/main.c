@@ -60,7 +60,6 @@
 #include "configuration.h"
 #include "cap_touch.h"
 
-extern configState configurationState;
 extern char tempPassword[];
 extern tISO14443A_UidSize uidLength;
 extern char uid[];
@@ -73,7 +72,6 @@ uint8_t *guid;
 volatile uint8_t cdcDataReceived;
 
 /*********** Application specific globals **********************/
-volatile uint8_t delayUntilReadNfc;
 
 volatile uint8_t keySendComplete = TRUE;
 uint8_t button1Buf[128] = "msp430";
@@ -126,12 +124,11 @@ void main (void)
 	LED_PORT_SET;
 
 	clearBuffer();
-	configurationState = RUNNING;
 
 	// Set up TRF initial settings
 	Trf797xInitialSettings();
 
-	startNfcTimer();
+	startTimer();
 
 	// Enable global interrupts
 	__bis_SR_register(GIE);
@@ -140,47 +137,34 @@ void main (void)
 	// Wait for USB to be up and stable
 	waitForUsbActive();
 
-	delayUntilReadNfc = 1;
 
 	while(1)
 	{
 
-		if (delayUntilReadNfc == 0) {
+		if (mode == SCAN_FOR_NFC || mode == PASSWORD_READY_TO_STORE) {
 
-			delayUntilReadNfc = 1;
+//			delayUntilReadNfc = 1;
 
-			checkStoreNewPasswordAndTagTimer();
+//			checkStoreNewPasswordAndTagTimer();
 
 			if (Nfc_FindTag() == STATUS_SUCCESS)
 			{
 				size = Iso14443a_Get_UidSize();
 				guid = Iso14443a_Get_Uid();
 
-				if (configurationState == PASSWORD_READY_TO_STORE) {
-
+				if (mode == PASSWORD_READY_TO_STORE) {
 					storeUidAndPasswordInFlash(size, guid, tempPassword);
-					// Successful read. Stop reading for a bit
-					delayUntilReadNfc = 8;
+					setModePause();
 
-				}else {
+				} else {
 
 					// Compare and unlock
 					if ((size == uidLength) && (memcmp(guid, uid, uidLength) == 0))
 					{
-						LED_GREEN;
 						unlockPC();
-						// Successful read. Stop reading for a bit
-						delayUntilReadNfc = 8;
-					} else {
-						LED_RED;
+						setModePause();
 					}
 				}
-
-			} else {
-				if (configurationState == PASSWORD_READY_TO_STORE)
-					LED_YELLOW;
-				else
-					LED_OFF;
 			}
 		}
 
@@ -194,6 +178,7 @@ void main (void)
 
 
 } //main()
+
 
 void unlockPC(void) {
 

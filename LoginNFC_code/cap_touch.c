@@ -14,8 +14,6 @@ int threshold = 0;
 
 void initCapTouch() {
 
-		WDTCTL = WDT_MDLY_32;                     // WDT 32ms, SMCLK, interval timer
-
 	    PxDIR(CAP_PORT) |= CAP_OUT;
 	    PxDIR(CAP_PORT) &= ~CAP_IN;
 	    PxOUT(CAP_PORT) = 0;
@@ -31,7 +29,26 @@ void initCapTouch() {
 	    counter = 0;
 	    PxOUT(CAP_PORT) = CAP_OUT;
 
+}
 
+void captureCapTouchMeasurement()
+{
+	int measurement = counter;
+		counter = 0;
+
+		if (average == 0) {
+			average = measurement;
+		} else 	{
+			// Rolling average and threshold
+			average = ((average * 7) + measurement)/8;
+		}
+		threshold = average - average/16;
+
+		touched = (measurement < threshold);
+}
+
+bool touchDetected() {
+	return touched;
 }
 
 #pragma vector=PORT1_VECTOR
@@ -53,26 +70,4 @@ __interrupt void Port_1(void)
 	counter++;
 }
 
-#pragma vector=WDT_VECTOR
-__interrupt void WDT_ISR(void)
-{
-	volatile int measurement = counter;
-	counter = 0;
-
-	if (measurement < threshold) {
-		// Touch!
-		P1OUT |= LED;
-		return;
-	} else {
-		P1OUT &= ~LED;
-	}
-
-	if (average == 0) {
-		average = measurement;
-	} else 	{
-		// Rolling average and threshold
-		average = ((average * 7) + measurement)/8;
-	}
-	threshold = average - average/16;
-}
 

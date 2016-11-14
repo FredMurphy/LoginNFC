@@ -14,9 +14,6 @@ char tempPassword[MAX_STR_LENGTH];
 #define MAX_PASSWORD_LENGTH 64
 #define MAX_UID_LENGTH ISO14443A_UID_TRIPLE
 
-configState configurationState;
-unsigned char readTagToStoreDelay;
-
 char tempPassword[];
 
 // Store in info D (0x1800)
@@ -47,23 +44,22 @@ void handleCDCDataReceived(void) {
     // Has the user pressed return yet?
     if (retInString(wholeString)){
 
-    	switch(configurationState) {
-
-    		case RUNNING:
-    			storePasswordInRAM(wholeString);
-    			cdcSend("\r\nScan NFC tag to store new password...\r\n");
-    			LED_RED;
-    			LED_YELLOW;
-    			configurationState = PASSWORD_READY_TO_STORE;
-    			readTagToStoreDelay = 32;
-    			break;
+    	switch(mode) {
 
     		case PASSWORD_READY_TO_STORE:
     			cdcSend("Cancelled.\r\n");
     			clearBuffer();
 				LED_OFF;
-				configurationState = RUNNING;
+				setModeTouch();
 				break;
+
+    		default:
+    			storePasswordInRAM(wholeString);
+    			cdcSend("\r\nScan NFC tag to store new password...\r\n");
+    			LED_RED;
+    			LED_YELLOW;
+    			setModePassword();
+    			break;
     	}
 
     }
@@ -71,11 +67,13 @@ void handleCDCDataReceived(void) {
 }
 
 void checkStoreNewPasswordAndTagTimer() {
-	if (configurationState == PASSWORD_READY_TO_STORE) {
+	if (mode == PASSWORD_READY_TO_STORE) {
+		/*
 		if (--readTagToStoreDelay == 0) {
 			cdcSend("Timed out.\r\n");
-			configurationState = RUNNING;
+			setModeTouch();
 		}
+		*/
 	}
 }
 
@@ -115,7 +113,7 @@ void storeUidAndPasswordInFlash(tISO14443A_UidSize newUidLength, uint8_t* newUid
 	  cdcSend("New password stored.\r\n");
 
 	  LED_OFF;
-	  configurationState = RUNNING;
+	  setModeTouch();
 }
 
 /*

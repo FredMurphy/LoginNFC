@@ -13,14 +13,22 @@ void initPorts(void);
 void initClocks(uint32_t mclkFreq);
 void McuCounterSet(void);
 void McuDelayMillisecond(uint32_t n_ms);
-void startNfcTimer();
+void startTimer();
+volatile uint16_t cyclesRemaining;
 
-#define PxIN(port)  P##port##IN
-#define PxOUT(port) P##port##OUT
-#define PxDIR(port) P##port##DIR
-#define PxIE(port)  P##port##IE
-#define PxIES(port) P##port##IES
-#define PxIFG(port) P##port##IFG
+typedef enum {
+	WAIT_FOR_TOUCH,
+	SCAN_FOR_NFC,
+	PASSWORD_READY_TO_STORE,
+	PAUSE
+} deviceMode;
+
+volatile deviceMode mode;
+
+void setModeTouch(void);
+void setModeNFC(void);
+void setModePassword(void);
+void setModePause(void);
 
 //=====MCU constants=============================================
 #if defined (__MSP430F5529__)
@@ -89,6 +97,11 @@ void startNfcTimer();
 #define LED_RED			LED_RED_PORT |= LED_RED_PIN; LED_GREEN_PORT &= ~LED_GREEN_PIN
 #define LED_GREEN		LED_RED_PORT &= ~LED_RED_PIN; LED_GREEN_PORT |= LED_GREEN_PIN
 #define LED_YELLOW		LED_RED_PORT |= (LED_RED_PIN + LED_GREEN_PIN)
+
+#define CAP_PORT	1
+#define CAP_OUT		BIT4
+#define CAP_IN		BIT3
+#define LED 		BIT2
 
 #define TRF_ENABLE_SET	P4DIR |= BIT6		// P4.1 is switched in output direction
 #define	TRF_ENABLE		P4OUT |= BIT6		// EN pin on the TRF7970A

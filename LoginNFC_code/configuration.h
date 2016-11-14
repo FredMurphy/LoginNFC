@@ -16,14 +16,6 @@
 #include "USB_config/descriptors.h"
 #include "nfc.h"
 
-typedef enum
-{
-	RUNNING,
-	PASSWORD_READY_TO_STORE
-} configState;
-
-
-
 void handleCDCDataReceived(void);
 uint8_t retInString (char* string);
 void clearBuffer(void);

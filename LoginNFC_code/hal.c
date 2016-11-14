@@ -6,6 +6,7 @@
 #include "hal.h"
 #include "trf797x.h"
 #include "ucs.h"
+#include "cap_touch.h"
 
 #define GPIO_ALL	GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3| \
 					GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7
@@ -151,29 +152,74 @@ void McuDelayMillisecond(uint32_t n_ms) {
 	}
 }
 
-extern volatile uint8_t delayUntilReadNfc;
+//extern volatile uint8_t delayUntilReadNfc;
 
-void startNfcTimer() {
+void startTimer() {
 
+	// Use watchdog as timer
+	WDTCTL = WDT_MDLY_32;                     // WDT 32ms, SMCLK, interval timer
+
+	mode = WAIT_FOR_TOUCH;
+
+	/*
 	// Using TimerB because A1 seemed to not run continuously
 	TBCCTL0 = CCIE;                           // TBCCR0 interrupt enabled
 	TBCCR0 = 750 * 2;	// About 750ms?
 	TBCTL = TBSSEL_1 + MC_1 + TBCLR;          // SMCLK, upmode, clear TBR
-
-	/*
-	// Setup Timer A1
-	TA1CTL |= TACLR;							// Clear the Timer
-	TA1CTL |= TASSEL_1 + TAIE;		// ACLK, Div 8, Interrupt Enable, Timer Stop
-
-	TA1R = 0x0000;
-	TA1CCTL0 |= CCIE;							// Compare interrupt enable
-
-	TA1CCR0 = 1000;							// About 600ms? Timer
-	TA1CTL |= MC_2 + TACLR;								// Start counter in continuous up mode
 	*/
-
 }
 
+#pragma vector=WDT_VECTOR
+__interrupt void WDT_ISR(void)
+{
+	captureCapTouchMeasurement();
+
+	switch (mode)
+	{
+	case WAIT_FOR_TOUCH:
+		if (touchDetected()) {
+			setModeNFC();
+		}
+		break;
+
+	case SCAN_FOR_NFC:
+	case PASSWORD_READY_TO_STORE:
+	case PAUSE:
+		if (cyclesRemaining-- <= 0) {
+			setModeTouch();
+		}
+		break;
+
+	default:
+		mode = WAIT_FOR_TOUCH;
+		LED_OFF;
+		break;
+	}
+}
+
+void setModeTouch(void) {
+	mode = WAIT_FOR_TOUCH;
+	LED_OFF;
+	cyclesRemaining = 500;
+}
+void setModeNFC(void) {
+	mode = SCAN_FOR_NFC;
+	LED_RED;
+	cyclesRemaining = 500;
+}
+void setModePassword(void)
+{
+	mode = PASSWORD_READY_TO_STORE;
+	LED_YELLOW;
+	cyclesRemaining = 2500;
+}
+void setModePause() {
+	mode = PAUSE;
+	LED_GREEN;
+	cyclesRemaining = 500;
+}
+
+/*
 // NFC timer ISR
 #pragma vector=TIMERB0_VECTOR
 __interrupt void TimerA1Handler(void) {
@@ -183,3 +229,4 @@ __interrupt void TimerA1Handler(void) {
 		delayUntilReadNfc--;
 
 }
+*/

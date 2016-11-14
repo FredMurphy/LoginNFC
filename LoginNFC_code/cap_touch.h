@@ -8,11 +8,13 @@
 #ifndef CAP_TOUCH_H_
 #define CAP_TOUCH_H_
 
-#define CAP_PORT	1
-#define CAP_OUT		BIT4
-#define CAP_IN		BIT3
-#define LED 		BIT2
+#include "hal.h"
+
+volatile bool touched;
 
 void initCapTouch(void);
+void captureCapTouchMeasurement(void);
+bool touchDetected();
+
 
 #endif /* CAP_TOUCH_H_ */
