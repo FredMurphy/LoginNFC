@@ -2,7 +2,7 @@
  * keyboardplus.c
  *
  *  Created on: 28 Oct 2014
- *      Author: 0xfred
+ *      Author: 0xFRED
  */
 //#include "USB_API/USB_Common/usb.h"                  // USB-specific functions
 #include <stdint.h>

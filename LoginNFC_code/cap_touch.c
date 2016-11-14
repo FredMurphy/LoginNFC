@@ -2,7 +2,7 @@
  * cap_touch.c
  *
  *  Created on: 11 Nov 2016
- *      Author: fred2
+ *      Author: 0xFRED
  */
 #include "msp430.h"
 #include "cap_touch.h"

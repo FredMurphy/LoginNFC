@@ -2,7 +2,7 @@
  * cap_touch.h
  *
  *  Created on: 11 Nov 2016
- *      Author: fred2
+ *      Author: 0xFRED
  */
 
 #ifndef CAP_TOUCH_H_

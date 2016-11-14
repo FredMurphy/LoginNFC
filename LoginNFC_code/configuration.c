@@ -2,7 +2,7 @@
  * configuration.c
  *
  *  Created on: 2 Feb 2016
- *      Author: fred2
+ *      Author: 0xFRED
  */
 #include "configuration.h"
 #include "nfc.h"
@@ -17,8 +17,6 @@ char tempPassword[MAX_STR_LENGTH];
 char tempPassword[];
 
 // Store in info D (0x1800)
-// #pragma DATA_SECTION(uidLength,".infoD")
-// Not sure how to locate a whole block of variables sequentially
 #pragma location=0x1800
 tISO14443A_UidSize uidLength = ISO14443A_UID_UNKNOWN;
 #pragma location=0x1802

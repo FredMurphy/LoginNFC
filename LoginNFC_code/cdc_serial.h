@@ -2,7 +2,7 @@
  * cdcSerial.h
  *
  *  Created on: 2 Nov 2014
- *      Author: fred2_000
+ *      Author: 0xFRED
  */
 
 #ifndef CDC_SERIAL_H_

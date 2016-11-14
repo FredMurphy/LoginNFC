@@ -2,7 +2,7 @@
  * configuration.h
  *
  *  Created on: 2 Feb 2016
- *      Author: fred2
+ *      Author: 0xFRED
  */
 
 #ifndef CONFIGURATION_H_

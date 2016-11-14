@@ -1,48 +1,3 @@
-/* --COPYRIGHT--,BSD
- * Copyright (c) 2014, Texas Instruments Incorporated
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * *  Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * --/COPYRIGHT--*/
-/*
- * ======== main.c ========
- * Keyboard HID Demo:
- *
- * This example functions as a keyboard on the host. Once enumerated, pressing
- * one of the target board’s buttons causes a string of six characters –
- * "msp430" -- to be "typed" at the PC’s cursor, wherever that cursor is.
- * If the other button is held down while this happens, it acts as a shift key,
- * causing the characters to become "MSP$#)".
- * Unlike the HID-Datapipe examples, this one does not communicate with the
- * HID Demo Application.
-  +----------------------------------------------------------------------------+
- * Please refer to the Examples Guide for more details.
- *----------------------------------------------------------------------------*/
 #include <string.h>
 
 #include "driverlib.h"
@@ -70,13 +25,7 @@ uint8_t *guid;
 
 // Serial comms
 volatile uint8_t cdcDataReceived;
-
-/*********** Application specific globals **********************/
-
 volatile uint8_t keySendComplete = TRUE;
-uint8_t button1Buf[128] = "msp430";
-uint8_t button1StringLength;
-
 
 void unlockPC(void);
 void waitForUsbActive(void);
@@ -86,9 +35,6 @@ void waitForUsbActive(void);
  */
 void main (void)
 {
-
-     //WDT_A_hold(WDT_A_BASE); // Stop watchdog timer
-
     // Minumum Vcore setting required for the USB API is PMM_CORE_LEVEL_2 .
     PMM_setVCore(PMM_CORE_LEVEL_2);
     initPorts();           // Config GPIOS for low-power (output low)
@@ -143,26 +89,21 @@ void main (void)
 
 		if (mode == SCAN_FOR_NFC || mode == PASSWORD_READY_TO_STORE) {
 
-//			delayUntilReadNfc = 1;
-
-//			checkStoreNewPasswordAndTagTimer();
-
 			if (Nfc_FindTag() == STATUS_SUCCESS)
 			{
 				size = Iso14443a_Get_UidSize();
 				guid = Iso14443a_Get_Uid();
 
 				if (mode == PASSWORD_READY_TO_STORE) {
-					storeUidAndPasswordInFlash(size, guid, tempPassword);
 					setModePause();
+					storeUidAndPasswordInFlash(size, guid, tempPassword);
 
 				} else {
-
 					// Compare and unlock
 					if ((size == uidLength) && (memcmp(guid, uid, uidLength) == 0))
 					{
-						unlockPC();
 						setModePause();
+						unlockPC();
 					}
 				}
 			}
@@ -176,8 +117,7 @@ void main (void)
 
 	}
 
-
-} //main()
+}
 
 
 void unlockPC(void) {
