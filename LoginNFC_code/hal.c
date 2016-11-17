@@ -202,10 +202,11 @@ void setModeTouch(void) {
 	LED_OFF;
 	cyclesRemaining = 500;
 }
+
 void setModeNFC(void) {
 	mode = SCAN_FOR_NFC;
-	LED_RED;
-	cyclesRemaining = 500;
+	LED_YELLOW;
+	cyclesRemaining = 1000;
 }
 void setModePassword(void)
 {

@@ -40,9 +40,15 @@ void captureCapTouchMeasurement()
 			average = measurement;
 		} else 	{
 			// Rolling average and threshold
-			average = ((average * 7) + measurement)/8;
+			if (measurement < average)
+				// Only decrease slowly, so we don't get "touch-blind"
+				average --;
+			else
+				average = ((average * 7) + measurement)/8;
 		}
-		threshold = average - average/16;
+
+		// Fairly low threshold
+		threshold = average - average/32;
 
 		touched = (measurement < threshold);
 }
