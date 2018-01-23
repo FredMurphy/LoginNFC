@@ -98,6 +98,7 @@ void setModePause(void);
 #define LED_GREEN		LED_RED_PORT &= ~LED_RED_PIN; LED_GREEN_PORT |= LED_GREEN_PIN
 #define LED_YELLOW		LED_RED_PORT |= (LED_RED_PIN + LED_GREEN_PIN)
 
+//#define USE_CAP_TOUCH
 #define CAP_PORT	1
 #define CAP_OUT		BIT4
 #define CAP_IN		BIT3

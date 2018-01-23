@@ -159,14 +159,12 @@ void startTimer() {
 	// Use watchdog as timer
 	WDTCTL = WDT_MDLY_32;                     // WDT 32ms, SMCLK, interval timer
 
+#ifdef USE_CAP_TOUCH
 	mode = WAIT_FOR_TOUCH;
+#else
+	mode = SCAN_FOR_NFC;
+#endif
 
-	/*
-	// Using TimerB because A1 seemed to not run continuously
-	TBCCTL0 = CCIE;                           // TBCCR0 interrupt enabled
-	TBCCR0 = 750 * 2;	// About 750ms?
-	TBCTL = TBSSEL_1 + MC_1 + TBCLR;          // SMCLK, upmode, clear TBR
-	*/
 }
 
 #pragma vector=WDT_VECTOR
@@ -174,12 +172,14 @@ __interrupt void WDT_ISR(void)
 {
 	captureCapTouchMeasurement();
 
+#ifdef USE_CAP_TOUCH
 	switch (mode)
 	{
 	case WAIT_FOR_TOUCH:
 		if (touchDetected()) {
 			setModeNFC();
 		}
+
 		break;
 
 	case SCAN_FOR_NFC:
@@ -195,6 +195,23 @@ __interrupt void WDT_ISR(void)
 		LED_OFF;
 		break;
 	}
+
+#else
+	switch (mode)
+	{
+	case PASSWORD_READY_TO_STORE:
+	case PAUSE:
+		if (cyclesRemaining-- <= 0) {
+			setModeNFC();
+		}
+		break;
+
+	default:
+		setModeNFC();
+		break;
+	}
+
+#endif
 }
 
 void setModeTouch(void) {
@@ -205,7 +222,11 @@ void setModeTouch(void) {
 
 void setModeNFC(void) {
 	mode = SCAN_FOR_NFC;
+#ifdef USE_CAP_TOUCH
 	LED_YELLOW;
+#else
+	LED_OFF;
+#endif
 	cyclesRemaining = 1000;
 }
 void setModePassword(void)

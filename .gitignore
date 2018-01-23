@@ -6,3 +6,4 @@ RemoteSystemsTempFiles
 Thumbs.db
 *.b?
 *.gcode
+.jxbrowser-data
