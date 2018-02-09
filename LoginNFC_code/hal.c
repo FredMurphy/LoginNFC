@@ -227,7 +227,7 @@ void setModeNFC(void) {
 #else
 	LED_OFF;
 #endif
-	cyclesRemaining = 1000;
+	cyclesRemaining = 2000;
 }
 void setModePassword(void)
 {

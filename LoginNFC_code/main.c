@@ -97,6 +97,7 @@ void main (void)
 				if (mode == PASSWORD_READY_TO_STORE) {
 					setModePause();
 					storeUidAndPasswordInFlash(size, guid, tempPassword);
+					mode = PAUSE;
 
 				} else {
 					// Compare and unlock
