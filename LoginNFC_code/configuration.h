@@ -20,7 +20,7 @@ void handleCDCDataReceived(void);
 uint8_t retInString (char* string);
 void clearBuffer(void);
 void storePasswordInRAM(char* newPassword);
-void storeUidAndPasswordInFlash(tISO14443A_UidSize uidLength, uint8_t* newUid, char* newPassword);
+void storeUidAndPasswordInFlash(tISO14443A_UidSize uidLength, uint8_t* newUid, char newIsWindows, char* newPassword);
 void checkStoreNewPasswordAndTagTimer(void);
 
 

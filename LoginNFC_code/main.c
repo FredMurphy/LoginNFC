@@ -15,9 +15,11 @@
 #include "configuration.h"
 #include "cap_touch.h"
 
+extern char tempIsWindows;
 extern char tempPassword[];
 extern tISO14443A_UidSize uidLength;
 extern char uid[];
+extern char isWindows;
 extern char password[];
 
 tISO14443A_UidSize size;
@@ -87,16 +89,16 @@ void main (void)
 	while(1)
 	{
 
-		if (mode == SCAN_FOR_NFC || mode == PASSWORD_READY_TO_STORE) {
+		if (mode == SCAN_FOR_NFC || mode == PASSWORD_SCAN_NFC) {
 
 			if (Nfc_FindTag() == STATUS_SUCCESS)
 			{
 				size = Iso14443a_Get_UidSize();
 				guid = Iso14443a_Get_Uid();
 
-				if (mode == PASSWORD_READY_TO_STORE) {
+				if (mode == PASSWORD_SCAN_NFC) {
 					setModePause();
-					storeUidAndPasswordInFlash(size, guid, tempPassword);
+					storeUidAndPasswordInFlash(size, guid, tempIsWindows, tempPassword);
 					mode = PAUSE;
 
 				} else {
@@ -125,8 +127,10 @@ void unlockPC(void) {
 
     size_t passwordLength = strlen(password);
 
-	sendCtrlAltDel();
-	__delay_cycles(8000000);
+    if (isWindows > 0) {
+    	sendCtrlAltDel();
+    	__delay_cycles(8000000);
+    }
 
     uint8_t i;
     for (i=0; i<passwordLength; i++) {

@@ -6,6 +6,7 @@
  */
 #include "configuration.h"
 #include "nfc.h"
+#include "hal.h"
 
 #define MAX_STR_LENGTH 64
 char wholeString[MAX_STR_LENGTH] = ""; // Entire input str from last 'return'
@@ -14,6 +15,7 @@ char tempPassword[MAX_STR_LENGTH];
 #define MAX_PASSWORD_LENGTH 64
 #define MAX_UID_LENGTH ISO14443A_UID_TRIPLE
 
+char tempIsWindows;
 char tempPassword[];
 
 // Store in info D (0x1800)
@@ -22,6 +24,8 @@ tISO14443A_UidSize uidLength = ISO14443A_UID_UNKNOWN;
 #pragma location=0x1802
 char uid[MAX_UID_LENGTH] = "\0";
 #pragma location=0x180C
+char isWindows=0;
+#pragma location=0x180E
 char password[MAX_PASSWORD_LENGTH] = "password\0";
 
 
@@ -31,48 +35,62 @@ void handleCDCDataReceived(void) {
     char pieceOfString[MAX_STR_LENGTH] = "";
 
     // Add bytes in USB buffer to the string
-    cdcReceiveDataInBuffer((uint8_t*)pieceOfString, MAX_STR_LENGTH, CDC0_INTFNUM); // Get the next piece of the string
+    uint16_t bytesReceived = cdcReceiveDataInBuffer((uint8_t*)pieceOfString, MAX_STR_LENGTH, CDC0_INTFNUM); // Get the next piece of the string
 
     // Append new piece to the whole
     strcat(wholeString,pieceOfString);
 
     // Echo back the characters received
-    cdcSend(pieceOfString);
-
-    // Has the user pressed return yet?
-    if (retInString(wholeString)){
-
-    	switch(mode) {
-
-    		case PASSWORD_READY_TO_STORE:
-    			cdcSend("Cancelled.\r\n");
-    			clearBuffer();
-				LED_OFF;
-				setModeTouch();
-				break;
-
-    		default:
-    			storePasswordInRAM(wholeString);
-    			cdcSend("\r\nScan NFC tag to store new password...\r\n");
-    			LED_RED;
-    			LED_YELLOW;
-    			setModePassword();
-    			break;
+    if (mode == PASSWORD_ENTRY) {
+    	while(bytesReceived > 0) {
+    		if (pieceOfString[--bytesReceived] != 0x0D)
+    			cdcSend("*");
     	}
-
+    	cyclesRemaining = 5000;
+    } else {
+    	cdcSend(pieceOfString);
     }
 
-}
+    // Has the user pressed return yet?
+    if (!retInString(wholeString))
+    	return;
 
-void checkStoreNewPasswordAndTagTimer() {
-	if (mode == PASSWORD_READY_TO_STORE) {
-		/*
-		if (--readTagToStoreDelay == 0) {
-			cdcSend("Timed out.\r\n");
+    switch (mode) {
+		case PASSWORD_SCAN_NFC:
+			cdcSend("Cancelled.\r\n");
+			clearBuffer();
+			LED_OFF;
 			setModeTouch();
-		}
-		*/
-	}
+			break;
+
+		case PASSWORD_ENTRY:
+			storePasswordInRAM(wholeString);
+			cdcSend("\r\nScan NFC tag to store new password.\r\n");
+			LED_YELLOW;
+			setModePasswordScanNfc();
+			break;
+
+		default:
+			if (strlen(wholeString) == 0) {
+				cdcSend("\r\nLoginNFC 0xFRED 2016-2018\r\nPlease enter one of the following:\r\n  Store [W]indows password (with Ctrl-Alt-Del typed before password)\r\n  Store [L]inux password (without)\r\n\r\n");
+			}
+			char c = wholeString[0] | BIT5;
+
+			if (c == 'w') {
+				tempIsWindows = 1;
+				cdcSend("Set to Windows mode\r\nPlease enter your password: ");
+				setModePasswordEntry();
+			}
+
+			if (c == 'l') {
+				tempIsWindows = 0;
+				cdcSend("Set to Linux mode\r\nPlease enter your password: ");
+				setModePasswordEntry();
+			}
+
+			clearBuffer();
+    }
+
 }
 
 void clearBuffer() {
@@ -89,7 +107,7 @@ void storePasswordInRAM(char* newPassword) {
 	clearBuffer();
 }
 
-void storeUidAndPasswordInFlash(tISO14443A_UidSize newUidLength, uint8_t* newUid, char* newPassword) {
+void storeUidAndPasswordInFlash(tISO14443A_UidSize newUidLength, uint8_t* newUid, char newIsWindows, char* newPassword) {
 
 	  FCTL3 = FWKEY;                            // Clear Lock bit
 	  FCTL1 = FWKEY+ERASE;                      // Set Erase bit
@@ -101,6 +119,8 @@ void storeUidAndPasswordInFlash(tISO14443A_UidSize newUidLength, uint8_t* newUid
 	  uint16_t i;
 	  for (i = 0; i < MAX_UID_LENGTH; i++)
 		  uid[i] = newUid[i];
+
+	  isWindows = newIsWindows;
 
 	  // Password
 	  strcpy(password, newPassword);

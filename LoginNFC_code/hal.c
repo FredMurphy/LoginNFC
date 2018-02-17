@@ -7,6 +7,7 @@
 #include "trf797x.h"
 #include "ucs.h"
 #include "cap_touch.h"
+#include "cdc_serial.h"
 
 #define GPIO_ALL	GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3| \
 					GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7
@@ -134,12 +135,12 @@ void McuCounterSet(void) {
 
 //===========================================================================
 //
-// McuDelayMillisecond - Delay for inputted number of millisecond
+// McuDelayMillisecond - Delay for a number of millisecond
 //
 // \param n_ms is the number of milliseconds to delay by
 //
 // Function to delay is approximately one millisecond, looping until the
-// inputted number of milliseconds have gone by. DELAY_1ms must be
+// entered number of milliseconds have gone by. DELAY_1ms must be
 // calibrated based on the clock speed of the MCU
 //
 // \return None.
@@ -199,9 +200,12 @@ __interrupt void WDT_ISR(void)
 #else
 	switch (mode)
 	{
-	case PASSWORD_READY_TO_STORE:
+	case PASSWORD_ENTRY:
+	case PASSWORD_SCAN_NFC:
 	case PAUSE:
 		if (cyclesRemaining-- <= 0) {
+			if (mode != PAUSE)
+				cdcSend("\r\nTimeout\r\n");
 			setModeNFC();
 		}
 		break;
@@ -229,12 +233,21 @@ void setModeNFC(void) {
 #endif
 	cyclesRemaining = 2000;
 }
-void setModePassword(void)
+
+void setModePasswordEntry(void)
 {
-	mode = PASSWORD_READY_TO_STORE;
+	mode = PASSWORD_ENTRY;
+	LED_GREEN;
+	cyclesRemaining = 5000;
+}
+
+void setModePasswordScanNfc(void)
+{
+	mode = PASSWORD_SCAN_NFC;
 	LED_YELLOW;
 	cyclesRemaining = 2500;
 }
+
 void setModePause() {
 	mode = PAUSE;
 	LED_GREEN;
